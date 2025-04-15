@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="pongGame.js" defer></script>
+        <title>Pong Game 1972</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            #container{
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: #222;
+            }
+            #playing-field{
+                width: min(90vw,90vh);
+                height: min(90vw,90vh);
+                display: flex;
+                position: relative;
+                background-color: black;
+                cursor: none;
+            }
+            .paddle{
+                width: min(1vw,1vh);
+                height: min(6vw,6vh);
+                position: absolute;
+                background-color: snow;
+                top: 0;
+                left: min(10vw,10vh);
+            }
+            .paddle.right{
+                left: min(80vw,80vh);
+            }
+            #ball{
+                width: min(1.5vw,1.5vh);
+                height: min(1.5vw,1.5vh);
+                position: absolute;
+                background-color: snow;
+                top: 0;
+                left: 0;
+            }
+            #center-line{
+                position: relative;
+                width: min(.5vw,.5vh);
+                height: 100%;
+                background: repeating-linear-gradient(0deg,snow 0 10px,black 0 20px);
+                left: min(45vw,45vh);
+            }
+            .score{
+                font-family: OCR A Std, arial;
+                font-size: min(12vw,12vh);
+                position: relative;
+                color: snow;
+            }
+            .score.left{
+                left: min(20vw,20vh);
+            }
+            .score.right{
+                left: min(60vw,60vh);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="playing-field">
+                <div class="paddle left"></div>
+                <div class="paddle right"></div>
+                <div id="ball"></div>
+                <div id="center-line"></div>
+                <div class="score left">0</div>
+                <div class="score right">0</div>
+            </div>
+        </div>
+    </body>
+</html>         
