@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>CSS Flexbox Layout Editor</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-size: 18px;
+            }
+            #wrapper{
+                width: 100vw;
+                height: 100vh;
+                display: grid;
+                grid-template-rows: 160px 20px 1fr;
+                grid-template-columns: 20px 1fr;
+                background-color: dimGray;
+            }
+            #header{
+                grid-area: 1/1/2/3;
+                background-color: darkGray;
+                display: grid;
+                grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+                grid-template-columns: 120px 120px 160px 230px 30px 130px;
+            }
+            #header div[style]{
+                margin-left: 10px;
+            }
+            #horizontal-axis{
+                grid-area: 2/1/3/3;
+                background-color: gray;
+                padding-left: 80px;
+                letter-spacing: 5px;
+            }
+            #vertical-axis{
+                grid-area: 3/1/4/2;
+                background-color: gray;
+                padding-top: 10px;
+                writing-mode: vertical-rl;
+                font-weight: bold;
+                letter-spacing: 5px;
+            }
+            #flexbox-container{
+                grid-area: 3/2/4/3;
+                background-color: dimGray;
+                display: flex;
+            }
+            #flexbox-container div:hover,div[data-current]{
+                border: 4px solid snow;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper">
+            <div id="header">
+                <div style="grid-area:1/1/2/4;letter-spacing:7px;">CSS Flexbox  properties</div>
+                <div style="grid-area:2/1/3/2;">flex-direction:</div>
+                <select id="flex-direction" style="grid-area:2/2/3/3;">
+                    <option value="row">row</option>
+                    <option value="column">column</option>
+                    <option value="row-reverse">row-reverse</option>
+                    <option value="column-reverse">column-reverse</option>
+                </select>
+                <div style="grid-area:3/1/4/2;">flex-wrap:</div>
+                <select id="flex-wrap" style="grid-area:3/2/4/3;">
+                    <option value="nowrap">nowrap</option>
+                    <option value="wrap">wrap</option>
+                    <option value="wrap-reverse">wrap-reverse</option>
+                </select>
+                <div style="grid-area:4/1/5/2;">justify-content:</div>
+                <select id="justify-content" style="grid-area:4/2/5/3;">
+                    <option value="center">center</option>
+                    <option value="flex-start">flex-start</option>
+                    <option value="flex-end">flex-end</option>
+                    <option value="space-around">space-around</option>
+                    <option value="space-between">space-between</option>
+                    <option value="space-evenly">space-evenly</option>
+                </select>
+                <div style="grid-area:5/1/6/2;">align-items:</div>
+                <select id="align-items" style="grid-area:5/2/6/3;">
+                    <option value="center">center</option>
+                    <option value="flex-start">flex-start</option>
+                    <option value="flex-end">flex-end</option>
+                    <option value="stretch">stretch</option>
+                    <option value="baseline">baseline</option>
+                    <option value="normal">normal</option>
+                </select>
+                <div style="grid-area:6/1/7/2;">align-content:</div>
+                <select id="align-content" style="grid-area:6/2/7/3;">
+                    <option value="center">center</option>
+                    <option value="stretch">stretch</option>
+                    <option value="flex-start">flex-start</option>
+                    <option value="flex-end">flex-end</option>
+                    <option value="space-around">space-around</option>
+                    <option value="space-between">space-between</option>
+                    <option value="space-evenly">space-evenly</option>
+                </select>
+                <div style="grid-area:2/3/3/4;" id="value-row-gap">row-gap:</div>
+                <input type="range" id="row-gap" style="grid-area:3/3/4/4;" min="0" max="100">
+                <div style="grid-area:4/3/5/4;" id="value-column-gap">column-gap:</div>
+                <input type="range" id="column-gap" style="grid-area:5/3/6/4;" min="0" max="100">
+                <div style="grid-area:1/4/2/5;" id="curr-id">Current Element</div>
+                <div style="grid-area:2/4/3/5;">bg-color:
+                    <select id="bg-color"></select>
+                </div>
+                <div style="grid-area:3/4/4/5;" id="value-curr-width">width:</div>
+                <input type="range" id="input-curr-width" style="grid-area:4/4/5/5;" min="20" max="700" value="100" autocomplete="off"> 
+                <div style="grid-area:5/4/6/5;" id="value-curr-height">heigth:</div>
+                <input type="range" id="input-curr-height" style="grid-area:6/4/7/5;" min="20" max="700" value="100" autocomplete="off">
+                <input type="button" id="add-elem" value="Add Element" style="grid-area:1/6/2/7;">
+                <input type="button" id="clone-curr" value="Clone Current" style="grid-area:2/6/3/7;">
+                <input type="button" id="delete-curr" value="Del Current" style="grid-area:3/6/4/7;">
+                <input type="button" id="delete-all" value="Del All" style="grid-area:4/6/5/7;">
+            </div>
+            <div id="horizontal-axis"></div>
+            <div id="vertical-axis"></div>
+            <div id="flexbox-container"></div>
+        </div>
+        <script>
+//*************************** global variables **********************
+const flexboxElem = document.querySelector("#flexbox-container");
+const headerElem = document.querySelector("#header");
+const fbWidth = flexboxElem.offsetWidth;
+const fbHeight = flexboxElem.offsetHeight;
+const colorsArr = ["salmon","hotPink","darkOrange","khaki","orchid","purple","slateBlue","limeGreen","seaGreen","darkGreen","darkCyan","aqua","cadetBlue","steelBlue","dodgerBlue","saddleBrown","maroon","darkSlateGray"];
+let currentElem; 
+//*************************** events ********************************
+headerElem.addEventListener("input",e=>{
+    update(e);
+})
+headerElem.addEventListener("click",e=>{
+    e.target.type === "button" && buttonsHandler(e); // if(e.target.type === "button") buttonsHandler(e);
+})
+flexboxElem.addEventListener("click",e=>{
+    if(e.target.id === "flexbox-container") return; // return if click was fired not by any created 'div' element.
+    document.querySelector("[data-current]")?.removeAttribute("data-current"); // custom data-current attribute signifies the selecter element;
+    e.target.dataset.current = "true"; // set 'div' element, which fired the event as current.
+    currentElem = e.target; // assign global variable to 'div' element, which fired the event.
+    updateCurrentElem(true);
+})
+//*************************** logic *********************************
+function buttonsHandler(e){
+    // construct the "id" for the new div element.
+    const elements = Array.from(flexboxElem.querySelectorAll("div") || []);
+    const newId = elements.length === 0 
+    ? "n0" 
+    : "n"+(parseInt(elements[elements.length-1].id.match(/\d+/))+1);
+    // depending on e.target.id - "id" attribute of the element, which fired the event.
+    switch(e.target.id){
+        case "add-elem":
+            createElem(newId, Math.floor(fbWidth/5), Math.floor(fbHeight/5), colorsArr[Math.floor(Math.random()*colorsArr.length)]);           
+            break;
+        case "clone-curr":
+            if(!currentElem) break;
+            createElem(newId, document.querySelector("#input-curr-width").value, document.querySelector("#input-curr-height").value, currentElem.style.backgroundColor);
+            break;
+        case "delete-curr":
+            if(currentElem) currentElem.remove();
+            currentElem = undefined;
+            break;
+        case "delete-all":
+            flexboxElem.innerHTML = "";
+            break;
+
+    }
+    // create and insert a div element inside flexbox.
+    function createElem(id, width, height, color){
+        const elem = document.createElement("div");
+        elem.id = id;
+        elem.style.width = width+"px";
+        elem.style.height = height+"px";
+        elem.style.backgroundColor = color;
+        elem.textContent = "\xa0"+id;
+        flexboxElem.appendChild(elem);
+    }
+}
+function update(e){
+    updateFlexbox(e);
+    if(/(input-curr)|(bg-color)/.test(e.target.id)){
+        updateCurrentElem();
+    }
+}
+function updateFlexbox(e,resetToDefault = false){
+    const props = ["flex-direction","flex-wrap","justify-content","align-items","align-content","row-gap","column-gap"];
+    const defaultValues = ["row","nowrap","flex-start","normal","stretch","normal","normal"];
+    if(resetToDefault){
+        defaultValues.forEach((val,i)=>{
+            document.querySelector(`${"#"+props[i]}`).value = val
+        })
+    }
+    props.forEach(prop=>{
+        const val = document.querySelector(`${"#"+prop}`).value;
+        prop = prop.replace(/(-\w)/,c=>c[1].toUpperCase());
+        flexboxElem.style[prop] = val;
+    })
+    displayAxes();
+    if(!e) return;
+    if(["row-gap","column-gap"].includes(e.target.id)){
+        const prop = e.target.id.replace(/(-\w)/,c=>c[1].toUpperCase());
+        const val = e.target.value;
+        flexboxElem.style[prop] = val+"px";
+        document.querySelector(`${"#value-"+e.target.id}`).textContent = e.target.id.replace("value-","")+": "+val+"px";
+    }
+}
+function displayAxes(){
+    const isHor = ["row","row-reverse"].includes(document.querySelector("#flex-direction").value);
+    const horStr = isHor ? "Main axis" : "Cross axis";
+    const verStr = isHor ? "Cross axis" : "Main axis";
+    document.querySelector("#horizontal-axis").textContent =`${horStr}${'\xa0'.repeat(7)}width: ${fbWidth}px.`;
+    document.querySelector("#vertical-axis").textContent=`${verStr}${'\xa0'.repeat(7)}height: ${fbHeight}px.`;
+}
+function updateCurrentElem(fromCurrent = false){
+    if(!currentElem) return;
+    const inputWidthElem = document.querySelector("#input-curr-width");
+    const inputHeightElem = document.querySelector("#input-curr-height");
+    if(fromCurrent){
+        inputWidthElem.value = parseInt(currentElem.style.width); 
+        inputHeightElem.value = parseInt(currentElem.style.height);
+    }else{
+        currentElem.style.width = inputWidthElem.value+"px";
+        currentElem.style.height = inputHeightElem.value+"px";
+        currentElem.style.backgroundColor = document.querySelector("#bg-color").value;
+    }
+    document.querySelector("#curr-id").textContent =`Current Element id: ${currentElem.id}`;
+    document.querySelector("#value-curr-width").textContent = `width: ${inputWidthElem.value}px`;
+    document.querySelector("#value-curr-height").textContent = `heigth: ${inputHeightElem.value}px`;
+    document.querySelector("#bg-color").value = currentElem.style.backgroundColor;
+}
+//*************************** start here ****************************
+// initialize <options> elements inside the 'bg-color' drop-down <select> element.
+colorsArr.forEach(color=>{   
+    const elem = document.createElement('option');
+    elem.setAttribute("value",color.toLowerCase());
+    elem.textContent = color;
+    document.querySelector("#bg-color").appendChild(elem);
+})
+// give flexbox a defined height and width, for "wrap" to work correctly.
+flexboxElem.style.width = fbWidth+"px";
+flexboxElem.style.height = fbHeight+"px";
+updateFlexbox(null,true);
+//*******************************************************************
+        </script>
+    </body>
+</html>
