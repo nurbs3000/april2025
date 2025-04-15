@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Drag and drop v2</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            main{
+                width: 100vw;
+                height: 80vh;
+                position: relative;
+                background-color: darkOliveGreen;
+            }
+            footer{
+                width: 100vw;
+                height: 20vh;
+                background-color: yellowGreen;
+                color: brown;
+            }
+            #div1{
+                width: 180px;
+                height: 120px;
+                position: relative;
+                background-color: indigo;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div id="div1"></div>
+        </main>
+        <footer>
+            <h2 class="mouse-xy"></h2>
+            <h2 class="info"></h2>
+        </footer>
+        <script>
+//*************************** global variables ************
+const mainElem = document.querySelector("main");
+const div1Elem = document.querySelector("#div1");
+let mouseX, mouseY, div1MouseDistX, div1MouseDistY;
+//*************************** events **********************
+document.addEventListener("mousemove",e=>{
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    document.querySelector(".mouse-xy").textContent = `mouse x: ${mouseX} y: ${mouseY}`;
+    document.querySelector(".info").textContent = `div1MouseDistX: ${div1MouseDistX} div1MouseDistY: ${div1MouseDistY}`;
+    if(div1MouseDistX === undefined) return;
+    div1Elem.style.left = div1MouseDistX+e.clientX+"px";
+    div1Elem.style.top = div1MouseDistY+e.clientY+"px";
+});
+div1Elem.addEventListener("mousedown",e=>{
+    div1MouseDistX = parseInt(div1Elem.style.left || 0)-e.clientX;
+    div1MouseDistY = parseInt(div1Elem.style.top || 0)-e.clientY;
+});
+mainElem.addEventListener("mouseup",e=>{
+    div1MouseDistX = undefined;
+});
+//*********************************************************
+        </script>
+    </body>
+</html>
