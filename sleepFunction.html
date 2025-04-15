@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sleep Function</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            #wrapper{
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background-color: darkSlateGray;
+                color: beige;
+                font-size: 15vw;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"></div>
+        <script>
+//*************************** global variables **********************
+const wrapperElem = document.querySelector("#wrapper");
+//*************************** logic *********************************
+function sleep(ms){
+    return new Promise(r=>setTimeout(r,ms));
+}
+async function doStuff(){
+    let counter = 0;
+    while(counter <= 10){
+        wrapperElem.textContent = counter++;
+        await sleep(1000); 
+    }
+    wrapperElem.textContent = "All";
+    await sleep(700);
+    wrapperElem.textContent +=" Stuff";
+    await sleep(700);
+    wrapperElem.textContent +=" is";
+    await sleep(700);
+    wrapperElem.textContent +=" done";
+    await sleep(3000);
+    wrapperElem.textContent = "";
+}
+//*************************** start from here ***********************
+doStuff();
+//*******************************************************************
+        </script>
+    </body>
+</html>
