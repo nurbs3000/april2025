@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="vieport" content="width=device-width, initial-scale=1.0">
+        <title>Resize div element</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            #container{
+                width: 100vw;
+                height: 100vh;
+                position: relative;
+                background-color: steelBlue;
+                border: 5px solid navy;
+                overflow: hidden;
+            }
+            #myDiv{
+                position: absolute;
+                background-color: darkOrange;
+                border: 5px solid yellow;
+            }
+            h2{
+                position: absolute;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="myDiv"></div>
+            <h2></h2>
+        </div>
+        <script>
+//*************************** global variable ***********************
+const myDivElem = document.querySelector('#myDiv');
+const containerElem = document.querySelector('#container');
+const infoElem = document.querySelector('h2');
+const DELTA_WIDTH = 5;
+let isMousedown = false;    // flag variable
+let holdMouseX, holdMouseY; // hold mouse curse coordinates, when LMB pressed
+let holdElem; // will hold the clone of myDiv element, when LMB pressed
+//*************************** events ********************************
+window.addEventListener("resize",e=>{
+    initMyDiv();
+});
+window.addEventListener('mousedown',e=>{
+    isMousedown = true;
+    holdMouseX = e.clientX; 
+    holdMouseY = e.clientY;
+    holdElem = e.target.cloneNode();
+});
+window.addEventListener('mouseup',e=>{
+    isMousedown = false;
+});
+myDivElem.addEventListener("mousemove",e=>{
+    setCursor(e,DELTA_WIDTH);
+    displayElemAttr(myDivElem);
+});
+containerElem.addEventListener("mousemove",e=>{
+    resizeMove(e,myDivElem);
+    displayElemAttr(myDivElem);
+});
+//*************************** logic *********************************
+function initMyDiv(){
+    const rect = containerElem.getBoundingClientRect();
+    myDivElem.style.left = rect.width/3+"px";
+    myDivElem.style.top = rect.height/3+"px";
+    myDivElem.style.width = rect.width/3+"px";
+    myDivElem.style.height = rect.height/3+"px";
+}
+function setCursor(e,w){
+    if(e.layerX < w){
+        if(e.layerY < w){
+            e.target.style.cursor = 'nw-resize';
+            return;
+        }
+        if(e.layerY > e.target.offsetHeight-w){
+            e.target.style.cursor = 'sw-resize';
+            return;
+        }    
+        e.target.style.cursor = 'w-resize';
+        return;
+    }
+    if(e.layerX > e.target.offsetWidth-w){
+        if(e.layerY < w){
+            e.target.style.cursor = 'ne-resize';
+            return;
+        }
+        if(e.layerY > e.target.offsetHeight-w){
+            e.target.style.cursor = 'se-resize';
+            return;
+        }
+        e.target.style.cursor = 'e-resize';
+        return;
+    }
+    if(e.layerY < w){
+        e.target.style.cursor = 'n-resize';
+        return;
+    }
+    if(e.layerY > e.target.offsetHeight-w){
+        e.target.style.cursor = 's-resize';
+        return;
+    }
+    if(e.layerY < 25){
+        e.target.style.cursor = 'move';
+        return;
+    }
+    e.target.style.cursor = 'auto';
+}
+function resizeMove(e,elem){
+    if(!isMousedown) return;
+    if(holdElem.id !== "myDiv") return;
+    const dX = e.clientX-holdMouseX, dY = e.clientY-holdMouseY; // differences between mouse cursor coordinates when LMB was pressed and current coordinates
+    if(holdElem.style.cursor === "move"){
+        elem.style.left = parseInt(holdElem.style.left)+dX+"px";
+        elem.style.top = parseInt(holdElem.style.top)+dY+"px";
+    }
+    if(holdElem.style.cursor === "n-resize") nResize();
+    if(holdElem.style.cursor === "s-resize") sResize();
+    if(holdElem.style.cursor === "w-resize") wResize();
+    if(holdElem.style.cursor === "e-resize") eResize();
+    if(holdElem.style.cursor === "ne-resize"){
+        nResize();
+        eResize();
+    }
+    if(holdElem.style.cursor === "se-resize"){
+        sResize();
+        eResize();
+    }
+    if(holdElem.style.cursor === "sw-resize"){
+        sResize();
+        wResize();
+    }
+    if(holdElem.style.cursor === "nw-resize"){
+        nResize();
+        wResize();
+    }
+    function nResize(){
+        elem.style.top = parseInt(holdElem.style.top)+dY+"px";
+        elem.style.height = parseInt(holdElem.style.height)-dY+"px";
+    }
+    function sResize(){
+        elem.style.height = parseInt(holdElem.style.height)+dY+"px";
+    }
+    function wResize(){
+        elem.style.left = parseInt(holdElem.style.left)+dX+"px";
+        elem.style.width = parseInt(holdElem.style.width)-dX+"px";
+    }
+    function eResize(){
+        elem.style.width = parseInt(holdElem.style.width)+dX+"px";
+    }
+}
+function displayElemAttr(elem){
+    infoElem.textContent =""; 
+    Array.from(elem.style).forEach(el=>{
+        infoElem.textContent +=el+": "+elem.style[el]+", ";
+    });
+}
+//*************************** star from here ************************
+initMyDiv();
+//*******************************************************************
+        </script>
+    </body>
+</html>
