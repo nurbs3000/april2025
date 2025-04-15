@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bouncing Particles</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            #wrapper{
+                width: 100vw;
+                height: 100vh;
+                display: grid;
+                grid-template-rows: 1fr 100px;
+                overflow: hidden;
+            }
+            main{
+                grid-area: 1/1/2/2;
+                position: relative;
+                background-color: white;
+            }
+            footer{
+                grid-area: 2/1/3/2;
+                position: relative;
+                background-color: gray;
+                padding: 10px 40px;
+            }
+            canvas{
+                position: absolute;
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+        <body>
+            <div id="wrapper">
+                <main>
+                    <canvas></canvas>
+                </main>
+                <footer> 
+                    <h2 id="info1"></h2>
+                    <h2 id="info2"></h2>
+                    <label for="range1">300</label>
+                    <input type="range" id="range1" min="1" max="5000" value="300" autocomplete="off">
+                </footer>
+            </div>
+            <script>
+//*************************** global variables **********************
+let isMousedown = false, lastTime = 0, frameTime;
+const particles = new Array();
+const canvasElem = document.querySelector("canvas");
+const mainElem = document.querySelector("main");
+const info1Elem = document.querySelector("#info1");
+const info2Elem = document.querySelector("#info2");
+const range1Elem = document.querySelector("#range1");
+const ctx = canvasElem.getContext("2d");
+//*************************** events ********************************
+mainElem.addEventListener("mousedown",e=>{
+    isMousedown = true;
+});
+mainElem.addEventListener("mouseup",e=>{
+    isMousedown = false;
+});
+document.querySelector("#range1").addEventListener("change",e=>{
+    document.querySelector('label[for="range1"]').textContent = e.target.value;
+    initParticles(e.target.value);
+});
+window.addEventListener("resize",initCanvas);
+//*************************** logic *********************************
+function initCanvas(){
+    const boundingRect = mainElem.getBoundingClientRect();
+    canvasElem.width = boundingRect.width;
+    canvasElem.height = boundingRect.height;
+    info2Elem.textContent = `canvas width: ${canvasElem.width}px heigth: ${canvasElem.height}px`;
+}
+function initParticles(qt){
+    particles.splice(0,particles.length); // the same as particles.length = 0
+    while(qt){
+        particles.push(new Particle());
+        --qt;
+    }
+}
+class Particle{
+    constructor(){
+        this.radius = 2+Math.random()*7
+        this.x = this.radius+Math.random()*(canvasElem.width-this.radius*2);
+        this.y = this.radius+Math.random()*(canvasElem.height-this.radius*2);
+        this.velX = Math.random()*3-1.5;
+        this.velY = Math.random()*3-1.5;
+        this.color = `hsl(${Math.floor(Math.random()*360)},100%,50%`;
+    }
+}
+function update(p){
+    p.x += p.velX;
+    p.y += p.velY;
+    const w = canvasElem.width, h = canvasElem.height;
+    if(p.x <= p.radius){
+        p.velX = -p.velX;
+        p.x = p.radius;
+    }
+    if(p.x >= w-p.radius){
+        p.velX = -p.velX;
+        p.x = w-p.radius;
+    }
+    if(p.y <= p.radius){
+        p.velY = -p.velY;
+        p.y = p.radius;
+    }
+    if(p.y >= h-p.radius){
+        p.velY = -p.velY;
+        p.y = h-p.radius;
+    }
+}
+function render(p){
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.radius, 0, Math.PI*2);
+    ctx.fill();
+}
+function animate(timeStamp){
+    frameTime = timeStamp-lastTime;
+    lastTime = timeStamp;
+    info1.textContent = `FPS: ${Math.round(1000/frameTime)}`;
+    isMousedown || ctx.clearRect(0,0,canvasElem.width,canvasElem.height);
+    particles.forEach(part=>{
+        update(part);
+        render(part);
+    });
+    requestAnimationFrame(animate);
+}
+//*************************** start from here ***********************
+initCanvas();
+initParticles(range1Elem.value);
+onload = ()=>animate(0);
+//*******************************************************************
+            </script>
+        </body>
+    </head>
+</html>
