@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>HTML 2D Array</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-size: 20px;   /* the bigger the font, the better. */
+            }
+            #wrapper{
+                width: 100vw;   /* 100vw is 100% viewport's width */
+                height: 100vh;  /* the same for height */
+                display: flex;  /* 1D vertical layout, of only 2 elements: header and main, so flex with column direction is perfect */
+                flex-direction: column;
+            }
+            header{ /* there will be 2 sliders with they values info */
+                width: 100%;
+                height: 80px;
+                background-color: dimGray;
+                display: flex;
+                justify-content: space-evenly; /* let them have some space */
+                align-items: center; /* alignment along cross axis, its vertical by default */
+            }
+            header div{
+                width: 200px;
+            }
+            main{
+                width: 100%;
+                height: 100%; /* takes all remaining height, it's 100vh-80px*/
+                background-color: #111; /* pick whatever color u want, it's free */
+                display: flex; /* flex and 2 CSS properties organaze main is such a way, that when appendChild() method add created divs into main.In left to right, top to bottom order.  */
+                flex-wrap: wrap;
+                align-content: flex-start;
+            }
+            main div{ /* styling for any div, except one with class 'selected' */
+                background-color: #001;
+                color: beige;
+                border: 2px solid #446;
+                white-space: pre; /* text will wrap only on line breaks \r\n */
+            }
+            main div.selected{  /* styling for div with class='selected' */
+                background-color: mistyRose;
+                color: black;
+                border: 2px solid darkKhaki;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- will hold everything within itself, and takes all veiwport's widht and height -->
+            <header> <!-- holds 2 sliders -->
+                <div id="slider-rows-qt">7 rows
+                    <input type="range" id="rows-qt" min="2" max="12" value="7" autocomplete="off" onkeydown="event.preventDefault()">
+                    <!-- preventDefault() method of the event interface disables arrow keys (after clickin on slider) controls, since arrow keys are used to 'move' selected div. -->
+                </div>
+                <div id="slider-cols-qt">7 colums
+                    <input type="range" id="cols-qt" min="2" max="12" value="7" autocomplete="off" onkeydown="event.preventDefault()">
+                </div>
+            </header>
+            <main></main> <!-- divs created by JS are put in main -->
+        </div>
+        <script>
+//*************************** global variables **********************
+const mainElem  = document.querySelector("main"); 
+//*************************** events ********************************
+document.querySelector("header").addEventListener("input",e=>{
+    const [rowsQt,colsQt] = inputValueArray(); // destructuring asignment syntax. inputValueArray() function  return array with 2 elements. Google 'javascript destructuring' if something is unclear.
+    document.querySelector("#slider-rows-qt").childNodes[0].textContent = rowsQt+" rows"; // select text node within div with id="slider-rows-qt" and update the text.
+    document.querySelector("#slider-cols-qt").childNodes[0].textContent = colsQt+" columns";
+    initHTMLArray(rowsQt,colsQt); // calls function passing number or rows and columns as arguments.
+});
+document.addEventListener("keydown",e=>{
+    moveSelectedDiv(e.key); // when any key is pressed call function passing property key of the event object.
+});
+//*************************** logic ********************************
+function initHTMLArray(rQt,cQt){
+    mainElem.innerHTML = ""; // delete everything inside main element.
+    const w = mainElem.offsetWidth; // main's width 
+    const h = mainElem.offsetHeight;    // main's height
+    const divWidth = Math.floor(w/cQt); // calculate div width, taking in acount number of columns, in such a way, they the take all main width. 
+    const divHeight = Math.floor(h/rQt);    // the same logic for height.
+    let someValueToKeep = 0; // this variable will be increased by 1 for each element and kept in data attribute val, to demonstrate how to store variables inside HTML "array". 
+    let r = -1; // to let next while loop start from 0.
+    while(++r < rQt){
+        let c = -1; // the same, for nested while loop.
+        while(++c < cQt){
+        const elem = document.createElement('div'); // create div element.
+        elem.style = `width:${divWidth}px;height:${divHeight}px;`// inline styling.
+        elem.id = `r${r}c${c}`; // construct div id. id will hold row number and column number.
+        elem.dataset.val = someValueToKeep++; // someValueToKeep variable assigned to HTML data attribute.
+        elem.textContent = `id="${elem.id}"\r\n${elem.dataset.val}`;
+        mainElem.appendChild(elem); // append div to main.
+        }
+    }
+    document.querySelector(`#r${Math.floor(rQt/2)}c${Math.floor(cQt/2)}`).classList.toggle("selected"); // calculate row and column somewhere in the center of array and add attribute class="selected" for element.
+}
+function moveSelectedDiv(key){  // this function will change row or column for selecte element, 'moving it' in arrows directions.
+    let [rowQt,colQt] = inputValueArray(); // desctucturing asignment syntax.
+    const selectedDivElem = document.querySelector("main>div.selected"); // currently selected element. (div with attribute class="selected" present).
+    let r = parseInt(selectedDivElem.id.match(/(?<=[r])\d+/)); // extract row number from id attrubute using match() method of String and regular expressions.  
+    let c = parseInt(selectedDivElem.id.match(/(?<=[c])\d+/)); // the same for column.
+    selectedDivElem.classList.toggle("selected"); // remove class="selected" attribute.
+    switch(key){ // will pick up needed code depending on pressed key.
+        case "ArrowUp":
+            r = r === 0 ? r : r-1; // ternary operator, to keep row number greater or equal to 0. The similar logic will be applied in next 3 cases.
+            break;
+        case "ArrowDown":
+            r = r === rowQt-1 ? r : r+1;
+            break;
+        case "ArrowLeft":
+            c = c === 0 ? c : c-1;
+            break;
+        case "ArrowRight":
+            c = c === colQt-1 ? c : c+1;
+            break;
+    }
+    document.querySelector(`#r${r}c${c}`).classList.toggle("selected"); // set attribute class="selected" in element on new row, column position.
+}
+function inputValueArray(){ // returns array with 2 elements, which are values of input elements (sliders).
+    return [
+        document.querySelector("#rows-qt").value,
+        document.querySelector("#cols-qt").value
+    ];
+}
+//*************************** start here ***************************
+onload = initHTMLArray(...inputValueArray()); // use spread operator on 2 elements array, returned by function inputValue. Try console.log([7,7]); and console.log(...[7,7]) to get a better grip how spread operator works.
+//******************************************************************
+        </script>
+    </body>
+</html>
