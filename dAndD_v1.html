@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Drag and Drop v1</title>
+        <style>
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            main{
+                width: 100vw;
+                height: 80vh;
+                position: relative;
+                background-color: midnightBlue;
+            }
+            footer{
+                width: 100vw;
+                height: 20vh;
+                background-color: darkSlateGray;
+                color: beige;
+            }
+            #div1{
+                width: 180px;
+                height: 120px;
+                position: absolute;
+                background-color: maroon;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div id="div1" draggable="true"></div>
+        </main>
+        <footer>
+            <h2 class="mouse-xy"></h2>
+            <h2 class="info"></h2>
+        </footer>
+        <script>
+//*************************** global variables ************
+const mainElem = document.querySelector("main");
+const div1Elem = document.querySelector("#div1");
+let mouseX, mouseY;
+//*************************** events **********************
+document.addEventListener("mousemove",e=>{
+    console.log("mousemove");
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    document.querySelector(".mouse-xy").textContent = `mouse x: ${mouseX} y: ${mouseY}`;
+    document.querySelector(".info").textContent = `div1Elem.style.left: ${div1Elem.style.left} ... .top ${div1Elem.style.top}`;
+});
+div1Elem.addEventListener("dragstart",e=>{
+    console.log("dragstart");
+});
+mainElem.addEventListener("dragover",e=>{
+    e.preventDefault();
+});
+mainElem.addEventListener("drop",e=>{
+    const dx = e.clientX-mouseX;
+    const dy = e.clientY-mouseY;
+    div1Elem.style.left = parseInt(div1Elem.style.left || 0)+dx+"px";
+    div1Elem.style.top = parseInt(div1Elem.style.top || 0)+dy+"px";
+});
+//*********************************************************
+console.log(div1Elem.style.left,div1Elem.style.top);
+        </script>
+    </body>
+</html>
