@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Voronoi diagram</title>
+        <style>
+            *{  /* universal selector - selects all elements */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* border and padding included in element's total widht and height */
+                font-size: 20px;
+            }
+            #container{
+                width: 100vw;   /* 100% of the viewport's width */
+                height: 100vh;  /* 100% of the viewport's height */
+                display: flex;
+                flex-direction: column; /* vertical main axis for flex */
+            }
+            nav{
+                width: 100%; /* 100% of the parent width */
+                height: 90px;   /* 90px is ok for sliders */
+                background: indigo; /* or whatever color you like */
+                color: antiqueWhite;
+                display: flex;  /* and 2 CSS protopertis below, to position sliders nicely */
+                justify-content: space-evenly;  
+                align-items: center;
+            }
+            main{
+                width: 100%; /* 100% of the parent width */
+                height: 100%;   /* 100% of the parent height */
+                position: relative; /* to set position of 2 canvas chidren to absolute */
+                background-color: thistle; /* the choice of color is yours */
+                overflow: hidden;
+            }
+            canvas{
+                position: absolute; /* both canvas must sit in one place */
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"> <!-- contains everything -->
+            <nav>
+                <div style="width:250px;" id="label-pointsQt">pointsQt:
+                    <input type="range" id="pointsQt" min="1" max="50" value="7" autocomplete="off"> <!-- autocomplete="off" force the browser on reloading page set element's value to 7 -->
+                </div>
+                <div style="width:250px;" id="label-cellSize">cellSize:
+                    <input type="range" id="cellSize" min="4" max="50" value="10" autocomplete="off">
+                </div>
+            </nav>
+            <main>
+                <!-- JS will set identical width and height for both canvas elements -->
+                <canvas id="main-canvas"></canvas> <!-- cells will be painted here -->
+                <canvas id="grid-canvas"></canvas> <!-- only for grid -->
+            </main>
+        </div>
+        <script>
+//*************************** global variables **********************
+const mainElem = document.querySelector("main");
+const gridCanvasElem = document.querySelector("#grid-canvas");
+const mainCanvasElem = document.querySelector("#main-canvas");
+const ctxGrid = gridCanvasElem.getContext("2d");
+const ctxMain = mainCanvasElem.getContext("2d");
+gridCanvasElem.width = mainCanvasElem.width = mainElem.offsetWidth; // both canvas elements must have the same size.
+gridCanvasElem.height = mainCanvasElem.height = mainElem.offsetHeight;
+const MIN_DIST_BETWEEN_POINTS = 5; // when function initPoints will place points/cells on cavas it will keep them this distance apart.
+const points = []; // array to hold points
+const sliders = {}; // object to hold slider's IDs and values, like { pointsQt: 7, cellSize: 10 }
+//*************************** events ********************************
+document.querySelector("nav").addEventListener("input",e=>{ 
+    readSliders(); 
+    drawGrid(); 
+    if(e.target.id === "pointsQt") initPoints(); // don't call initPoints for cellSize slider.
+    drawVoroni();
+    drawPoints();
+});
+//*************************** logic *********************************
+function readSliders(){ // apdate object sliders with new slider's values.
+    for(const id of ["pointsQt","cellSize"]){
+        sliders[id] = parseInt(document.querySelector(`#${id}`).value);
+        document.querySelector(`#label-${id}`).childNodes[0].nodeValue = id+": "+sliders[id]; // update childNodes with index 0 (its a textNode) value. 
+    }
+}
+function drawGrid(){ // name is self explanatory.
+    let cs = sliders["cellSize"]; // for convinience, to type less.
+    let w = gridCanvasElem.width, h = gridCanvasElem.height // the same.
+    ctxGrid.clearRect(0,0,w,h); // clear the whole canvas.
+    if(cs < 11) return; // if cellSize < 11 no need to draw grid.
+    ctxGrid.strokeStyle = "gray"; // gray is newtral color, ok for grid.
+    ctxGrid.lineWidth = 1;
+    for(let x = cs; x < w; x += cs){ // draw vertical grid lines.
+        ctxGrid.beginPath();
+        ctxGrid.moveTo(x,0);
+        ctxGrid.lineTo(x,h);
+        ctxGrid.stroke();
+    }
+    for(let y = cs; y < h; y += cs){ // draw horizonat grid lines.
+        ctxGrid.beginPath();
+        ctxGrid.moveTo(0,y);
+        ctxGrid.lineTo(w,y);
+        ctxGrid.stroke();
+    }
+}
+function initPoints(){ // fill the points array with objects like {x: randomNumber, y: randomNumber, hue: randomHue}
+    const w = mainCanvasElem.width, h = mainCanvasElem.height;
+    const cs = sliders["cellSize"];
+    const rowQt = Math.floor(h/cs), colQt = Math.floor(w/cs); // number of rows and columns in taking into account cellSize.
+    points.length = 0; // clear points array.
+    ctxMain.clearRect(0,0,w,h); // erase everythin on main canvas.
+    points.push(randomPoint()); // push in points array 1st point, without any checks.
+    for(let i = 1; i < sliders["pointsQt"]; ++i){ // loop to push the rest points.
+        let newPoint;   // function scope variable.
+        let maxRetries = 10000, retriesCounter = 0; // 2 variables to restrict looping, and avoid infinite cycles, when there is no place for next point.
+        do{
+            newPoint = randomPoint(); // assing object with new generated point properties as values.
+            retriesCounter++; // increse the counter.
+        }
+        while(
+            // check if new point is not too close to any already present, and if counter is less then maximum possible retries number.
+            (Math.min(...points.map(p=>Math.hypot(p.x-newPoint.x, p.y-newPoint.y))) < MIN_DIST_BETWEEN_POINTS*cs) && (retriesCounter < maxRetries)
+        );
+        if(retriesCounter < maxRetries) points.push(newPoint); // retriesCounter < maxRetries means the do while loop was exited with correct new point, and we can push it in array.
+    }
+    function randomPoint(){ // return object representing random point.
+        return {x: Math.floor(colQt*Math.random())*cs, y: Math.floor(rowQt*Math.random())*cs, hue: Math.floor(360*Math.random())};
+    }
+}
+function drawPoints(){
+    let cs = sliders["cellSize"]; // value of cellSize slider(input element with type="range" id="cellSize", if you wanna be too formal.
+    points.forEach(p=>{ // google 'array instance method forEach' if something is unclear here.
+        ctxMain.fillStyle = `hsl(${p.hue},100%,30%)`; // generate hsl color taking hue value from the object representing point.
+        ctxMain.fillRect(p.x, p.y, cs, cs); // fill the grid cell.
+    });
+}
+function drawVoroni(){ // all the rest was, for this function to be able to calculate each grid's cell color, and draw these cells.
+    const w = mainCanvasElem.width, h = mainCanvasElem.height; // for convinience.
+    const cs = sliders["cellSize"];
+    const rowQt = Math.floor(h/cs), colQt = Math.floor(w/cs); // Qt stands for quantity.
+    for(let r = 0; r < rowQt; ++r) for(let c = 0; c < colQt; ++c){ // nested for loops to scan every grid's cell.
+        // understanding of the reduce() method is required. This is big topic to cover in comments. Reduce() returns the nearest point in points array to the current point on row r and column c.  
+        const nearestPoint = points.reduce((a,p)=>(
+            Math.hypot(c*cs-p.x, r*cs-p.y) < Math.hypot(c*cs-a.x, r*cs-a.y) ? p : a
+        ));
+        ctxMain.fillStyle = `hsl(${nearestPoint.hue},100%,50%)`; // takes the neares point hue to fill the current grid's cell;
+        ctxMain.fillRect(c*cs, r*cs, cs, cs);   // fill the cell.
+    }
+}
+//*************************** start here ****************************
+readSliders();
+drawGrid();
+initPoints();
+drawVoroni();
+drawPoints();
+//*******************************************************************
+</script>
+</body>
+</html>
