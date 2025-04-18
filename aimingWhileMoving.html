@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utl-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Aiming while Moving</title>
+        <style>
+            *{ /* universal selectro "*" - selects all elements */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* border and padding included in element's total width and height */
+            }
+            #wrapper{
+                width: 100vw; /* 100% of the viewport's width */
+                height: 100vh; /* 100* of the viewport's height */
+                position: relative; /* to allow children have position: absolute */
+                cursor: crosshair; /* set CSS cursor propertie */
+                font-size: 40px; /* for readability */
+            }
+            main{
+                width: 100%; /* 100% of the parents width */
+                height: 100%; /* 100% of the parents height */
+                position: absolute; /* removed from normal flow, and can overlap elements */
+                background-color: #000010; /* all colors are up to you */
+            }
+            #info-canvas{
+                position: absolute; /* will overlap the main element */
+            }
+            #ship{ /* styled as the triangle HTML element */
+                width: 0; /* no need, only left border is displayed */
+                height: 0; /* the same */
+                position: absolute; /* to allow positioning using style.left and style.top attributes */
+                background-color: transparent;
+                border-top: 30px solid transparent;
+                border-left: 70px solid crimson;
+                border-bottom: 30px solid transparent;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- wraps everything -->
+            <main> <!-- inside the ship flies and mouse curse serve as target -->
+                <div id="ship"></div> <!-- the main character of our story -->
+            </main>
+            <canvas id="info-canvas"></canvas> <!-- canvas is drawn on top of main element, and serve to display auxiliary info -->
+        </div>
+        <script>
+//*************************** global variables **********************
+// next 3 variables are for convinience.
+const mainElem = document.querySelector("main");
+const canvasElem = document.querySelector("#info-canvas");
+const shipElem = document.querySelector("#ship");
+const ctx = canvasElem.getContext("2d"); // sets two dimensional rendering context.
+canvasElem.width = mainElem.offsetWidth; canvasElem.height = mainElem.offsetHeight; // set canvas size equal to main element.
+const shipObj = {x: canvasElem.width/2, y: canvasElem.height/2, rotAngle: 0, pixelsPerFrame: 2}; // ship object will contain all needed ship element properies: x,y coordinates, rotation angle, and speed in pixels per frame units.
+const pressedKeys = []; // this array will hold all the pressed keys.
+let offsetX = canvasElem.width, offsetY = canvasElem.height/2; // set initial target position in such a way, that ship rotation angle is 0.
+//*************************** events ********************************
+document.addEventListener("mousemove",e=>{
+    // set global 'target' coordinates equal to mouse curson position.
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+});
+document.addEventListener("keydown",e=>{ 
+    if(pressedKeys.indexOf(e.key) === -1) pressedKeys.push(e.key); // keydown event fires repeatedly, thats why, it push the key in the array only if there is no already such key.
+});
+document.addEventListener("keyup",e=>{
+    pressedKeys.splice(pressedKeys.indexOf(e.key),1); // removes the key from the list of pressed keys.
+});
+//*************************** logic *********************************
+function updateEverything(){ // this function will do all.
+    const updatePosObj = { // instead of 'switch' statement object literal is used. It's a big topic to cover in comments. In short, it do the same what 'switch' do, but in more elegant way. And with less code.
+        "ArrowUp": ()=>{shipObj.y -= shipObj.pixelsPerFrame},
+        "ArrowDown": ()=>{shipObj.y += shipObj.pixelsPerFrame},
+        "ArrowLeft": ()=>{shipObj.x -= shipObj.pixelsPerFrame},
+        "ArrowRight": ()=>{shipObj.x += shipObj.pixelsPerFrame},
+        "default": ()=>{},
+    // no checks for boudaries implemented, so 'ship' can fly in open space.
+    };
+    pressedKeys.forEach(key=>{
+        (updatePosObj[key] || updatePosObj["default"])(); // call the function, which is the value of object 'updatePosObj' with key equal to the pressed key. In the key is pressedKeys array is not one of 4 arrow keys, invoke function ()=>{}.
+    });
+    shipObj.rotAngle = Math.atan2(offsetY-shipObj.y, offsetX-shipObj.x); // Math.atan2 method is the "central point" of rotation algorithm. Id returns the rotation angle in radians, for the vector (x,y), which componets y and x are passed to the atat2 method as arguments. These are is the vector from ship location to the target (mouse curson).
+    shipElem.style = `left:${shipObj.x}px;top:${shipObj.y}px`; // set shipElement position, accordint to its coordinates in shipObj.
+    shipElem.style.transform =`translate(-50%,-50%)rotate(${shipObj.rotAngle}rad)`; // translate serve the purpose to position ship in such a way, that rotation center point will be somewhere inside the triangle.
+    ctx.clearRect(0,0,canvasElem.width,canvasElem.height); // erase everythin on cavas at the start of each 'frame'.
+    ctx.fillStyle = "yellow"; // let in be yellow.
+    // last lines output auxiliary info.
+    ctx.fillText(`${offsetX}, ${offsetY}`,offsetX+10,offsetY-10);
+    ctx.fillText(`${shipObj.x}, ${shipObj.y}`,shipObj.x+20,shipObj.y-20);
+    ctx.fillText(`pressedKes = [${pressedKeys[0]},${pressedKeys[1]}]`,20,40);
+    ctx.fillText(`offsetX-shipObj.x = ${offsetX-shipObj.x}`,20,70);
+    ctx.fillText(`offsetY-shipObj.y = ${offsetY-shipObj.y}`,20,100);
+    ctx.fillText(`shipObj.rotAngle = ${shipObj.rotAngle.toFixed(2)}rad`,20,130);
+}
+//*************************** start here ****************************
+ctx.font = "20px Arial"; // set size and font.
+const intervalId = setInterval(updateEverything, 1000/75); // repeatedly calls the function updateEverything every 1000/75ms, where 1000 is quantity of ms in one second, and 75 - frames per second.
+//*******************************************************************
+        </script>
+    </body>
+</html>
