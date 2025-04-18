@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse Click Ripple Effect</title>
+    <style>
+        :root{
+            --ripple-live-time: 1000ms; /* custom property a.k.a CSS variable, to change animation duration in one place. */
+        }
+        *{  /* universal selector. Selects all elements */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* include border and padding in element's total width and height */
+        }
+        #container{
+            width: 100vw;   /* 100% of the viewports width */
+            height: 100vh;  /* the same for height */
+            background-color: #001; /* optional color */
+            position: relative; /* allows absolute position for children divs */
+            z-index: 99; /* to be on top */
+        }
+        .ripple{
+            position: absolute; /* for style.left and style.top to work */
+            transform: translate(-50%,-50%); /* element's center will always be on its position coordinates */
+            border: 3px solid red; /* shorthand border property */
+            border-radius: 50%; /* borders form a circle */
+            animation-duration: var(--ripple-live-time); /* applies custom property */
+            animation-timing-function: ease-out; /* in the end the animation slows down */
+            animation-name: rippleAnim; /* a name for the $keyframes animation */
+        }
+        @keyframes rippleAnim{ /* CSS @keyframes rule controls the steps in animation sequence */
+            0% {width:0px; height:0px;};
+            100% {width:50px; height:50px;};
+
+        }
+    </style>
+    <body>
+        <div id="container">
+
+        </div> <!-- this element will hold div's creted on click -->
+    </body>
+    <script>
+//*************************** global variables **********************
+const containerElem = document.querySelector("#container"); /* idk, for convinience probably */ 
+//*************************** events ********************************
+document.addEventListener("click",e=>{
+    ripplesMaker(e); // a name tells us what it is for.
+    // continute doing whatever u need to do in this event...
+});
+//*************************** logic *********************************
+function ripplesMaker(e){
+    const elem = document.createElement('div'); // create div element.
+    elem.backgroundColor = "red"; // can be green too. 
+    elem.style.left = e.clientX+"px"; // e is mousemove event object passed from mousemove event as argument, clientX is horizontal mouse cursor coortinate.
+    elem.style.top = e.clientY+"px"; // the same for vertical coordinate.
+    elem.className = "ripple"; // set class attribute, to enable CSS selectro .ripple
+    containerElem.appendChild(elem); // put element in container
+    setTimeout( // setTimeout to delete appended elememt after animation duration
+        ()=>{elem.remove()}, // remove element
+        parseInt(getComputedStyle(document.querySelector(":root")).getPropertyValue("--ripple-live-time"))-30 // get attribute '1000ms' and pass it as argument to parseInt, to get a number 1000.
+    );
+}
+//*******************************************************************
+    </script>
+</html>
