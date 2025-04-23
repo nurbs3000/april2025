@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Random HSL Color</title>
+        <style>
+            *{ /* universal selector. Selects all elements */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* include the padding and border in an element's total with and height. */
+                font-size: 22px; /* well, evedently font-size. */
+            }
+            #wrapper{
+                width: 100vw; /* 100% of the viewport's width. */
+                height: 100vh;  /* 100% of the viewport's hieght. */
+                display: flex; /* set CSS display property to flex. */
+                flex-direction: column; /* items are displayed vertically (main axis is vertical) */
+                overflow: hidden; /* overflow content is clipped, no scoll bars. */
+            }
+            header{
+                width: 100%; /* 100% of its parent width */
+                height: 30px; /* px means pixel */
+                text-align: center; /* text-align CSS propetry specifies horizontal alighment of text in an element */
+                background-color: gray; /* your choice of color. */
+            }
+            nav{ 
+                width: 100%; /* 100% of its parent width. */
+                height: 40px;
+                background-color: dimGray; /* your choice of color. */
+                display: flex;
+                justify-content: space-evenly; /* items will have equal space around them on the main axis (horizontally by default). */
+                align-items: center; /* align-items CSS propetry specifies the alignment for items on the cross axis (vertically be default). */
+            }
+            figure{
+                width: 100%; /* 100% of its parent width. */
+                height: 100%; /* takes all available height. */
+                position: relative; /* to enable position: absolute for its child - canvas. */
+                overflow-y: scroll; /* only vertical scrollbar is needed. */
+                overflow-x: hidden;
+            }
+            figure>canvas{
+                position: absolute;
+                background-color: black;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- wrapps everything. -->
+            <header></header> <!-- will hold text, representing the current hsl color. -->
+            <nav> <!-- semantic HTML element. Holds all input elements. Can be <div> or any other block-lever element. The same is true for the elements <nav> and <figure> -->
+                <div>hue <!-- holds radio button, and input number elements for 'hue' component of the hsl color. -->
+                    <input type="radio" name="hsl-rbtns" value="hue" class="hue" checked autocomplete="off">
+                    <input type="number" id="hue" min="0" max="359" value="0" autocomplete="off">
+                </div>
+                <div>saturation <!-- the same for saturation. -->
+                    <input type="radio" name="hsl-rbtns" value="sat" class="sat" autocomplete="off">
+                    <input type="number" id="sat" min="0" max="100" value="100" autocomplete="off">
+                </div>
+                <div>lightness <!-- the same for lightness. -->
+                    <input type="radio" name="hsl-rbtns" value="lt" class="lt" autocomplete="off">
+                    <input type="number" id="lt" min="0" max="100" value="50" autocomplete="off">
+                </div>
+                <div>Gap <!-- holds checkbox to turn off/on gap between color bands. -->
+                    <input type="checkbox" id="check-gap" autocomplete="off">
+                </div>
+                <input type="range" id="color-band-height" min="22" max="70" value="30" autocomplete="off"> <!-- slider to control the height of the color bands. -->
+            </nav>
+            <figure> <!-- container for canvas element. Have vertical scroll, to scroll canvas. -->
+                <canvas></canvas> <!-- JS will generate and draw sequence of hsl colors in the form of horizontal bands here. -->
+            </figure>
+        </div>
+        <script> /* embedded JS. */
+//*************************** global variables **********************
+const canvasElem = document.querySelector("canvas");
+const figureElem = document.querySelector("figure");
+const headerElem = document.querySelector("header");
+const ctx = canvasElem.getContext("2d"); // getContext("2d") canvas element method returns an object with methods for drowing.
+let currentColor; // current color. Displayed at the top, and input elements modify it.
+//*************************** events ********************************
+document.querySelector("nav").addEventListener("input",()=>{ // nav elements contain all input elements. Input events bubble up to its parent "nav" element.
+    renderColorBands(); // this function will sort out all input events, and perform sequence of needed operations.
+});
+//*************************** logic *********************************
+function getCurrentColor(){ // get values of all 3 input number element, with IDs 'hue','sat','lt'. Using templete literal construct currentColor, and returns array with 3 element, representing hsl color components respectively.
+    const hsl = []; // in this array hue, sat, and lt components will be pushed.
+    for(const id of ["hue","sat","lt"]){ // for...of loop on array of 3 strings which are the same as IDs of input number elements.
+        hsl.push(parseInt(document.querySelector(`#${id}`).value)); // get input number element value and push it into the array.
+    }
+    currentColor = `hsl(${hsl[0]},${hsl[1]}%,${hsl[2]}%)`; // templete literal used to construct hsl color.
+    headerElem.textContent = currentColor; // display the hsl color in header.
+    headerElem.style.backgroundColor = currentColor; // set header background.
+    return hsl; // retruns array containing all 3 hsl color components.
+}
+function renderColorBands(){
+    let activeComponent; // this variable will hold class attribute value for the checked radio button. Respective radio buttons have the same class attribute as the input number elements IDs. 'hue','sat', and 'lt'.
+    const hsl = getCurrentColor(); // function returns array holding 3 hsl color components.
+    for(const cl of ["hue","sat","lt"]){ // for...of loop on array with 3 class names for radio buttons.
+        const numberElem = document.querySelector(`#${cl}`); // respective input element. 
+        if(document.querySelector(`.${cl}`).checked){ // if respective radio button checked.
+            activeComponent = cl; 
+            numberElem.removeAttribute("disabled"); // remove 'disabled' attribute for input element near the checked radio button.
+        }else{
+            numberElem.setAttribute("disabled",""); // disable the rest 2 input number elements.
+        }
+    }
+    const bandHeight = parseInt(document.querySelector("#color-band-height").value); // read color band's height as the value of the slider.
+    const bandsQt = activeComponent === "hue" ? 360 : 100; // define number of color bands 360 if activeComponent is 'hue' or 100 for 'sat' and 'lt'.
+    let gap = document.querySelector("#check-gap").checked ? 2 : 0; // if checkboc gap is cechked gap variable is 2, otherwise 0.
+    canvasElem.height = (bandsQt+1)*bandHeight; // set canvas height.
+    ctx.clearRect(0,0,canvasElem.width,canvasElem.height); // eraze everythin on canvas, just in case.
+    for(let i = 0; i <= bandsQt; ++i){ // this loop main task is to draw horizontal color stips on canvas. bandsQt is 360 if activeComponent is 'hue' and 100 if 'sat' or 'lt'.
+        if(i === bandsQt) console.log(i);
+        let col = `hsl( 
+            ${activeComponent === "hue" ? i : hsl[0]},
+            ${activeComponent === "sat" ? i : hsl[1]}%,
+            ${activeComponent === "lt" ? i : hsl[2]}%
+        )`; // loop variable 'i' will affect (cycle from 0 to 100 or from 0 to 360) only the activeComponent of hsl color (activeComponent is where radio button is checked.
+        col = col.replace(/\s+/g,""); // remove white spaces.
+        ctx.fillStyle = col; // set fill color for current color strip(band).
+        if(col === currentColor) // if 'col' variable is equl to currentColor(color set by input number elements) draw it a bit smaller, forming a border around it.
+            ctx.fillRect(10,i*bandHeight+3,canvasElem.width-36,(bandHeight-gap-6));
+        else // draw it full size.
+            ctx.fillRect(0,i*bandHeight,canvasElem.width,(bandHeight-gap));
+        ctx.fillStyle = parseInt(col.match(/\d+/g,)[2]) > 30 ? "black" : "white"; // for darker colors display text in 'white' color.
+        ctx.font = "16px Arial"; // set font size and font for canvas.
+        ctx.fillText(col,30,i*bandHeight+18); // draw the text inside color band(strip).
+    }
+    figureElem.scrollTop = bandHeight*hsl[["hue","sat","lt"].indexOf(activeComponent)]; // set vertical sroll bar in such a way, that currentColor is visible. 
+}
+//*************************** start here ****************************
+onload = ()=>{ // event is fired when the whole page has loaded.
+    canvasElem.width = figureElem.offsetWidth; // set canvas width equal to its parent element's width.
+    canvasElem.height = figureElem.offsetHeight; // the same for height.
+    renderColorBands(); // render colors initialy, since we dont need black background to greet us, until input event is fired.
+}
+//*******************************************************************
+        </script>
+    </body>
+</html>
