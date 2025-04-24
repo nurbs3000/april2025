@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Generating points with min or max distance</title>
+        <style>
+            *{ /* universal selector. Selects all elements */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* include the padding and border in an element's total width and height. */
+                font-size: 20px; /* to be readable. */
+            }
+            #wrapper{
+                width: 100vw; /* 100% of the viewport's width. */
+                height: 100vh; /* 100% of the viewport's height. */
+                display: flex; /* set CSS display property to flex. */
+                flex-direction: column; /* items are displayed vertically (main axis is vertical). */
+                overflow: hidden; /* overflow content is clipped, no scroll bars. */ 
+            }
+            header,footer{ /* selects header and footer elements. */
+                width: 100%; /* 100% of its parent width. */
+                height: 32px; /* is ok for font-size: 20px; */
+                background-color: brown; /* your choice of color. */
+                color: gold; /* your choice. */
+                display: flex; /* set CSS display property to flex. */
+                justify-content: space-evenly; /* items will have equal space around them. */
+                align-items: center; /* items are aligned in the center on the cross axis. */ 
+            }
+            #wrapper>footer{ 
+                align-self: flex-end; /* places footer at the bottom in the Flexbox. */
+            }
+            main{
+                width: 100%; /* 100% of its parent width. */
+                height: 100%; /* 100% of free height, it is 100vh - 32px - 32px. */
+                position: relative;
+                background-color: wheat; /* your choice of color. */
+            }
+            canvas{
+                position: absolute;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- wrapps everything. -->
+            <header> <!-- Semantic HTML element. Holds all input elements. -->
+                 <div>Min(spread)
+                    <input type="radio" name="minmax-rbtns" id="min-rbtn" checked autocomplete="off"> <!-- selects mode, when every next point is placed not nearear than minDist from any already present point. Points are spread. -->
+                    Dist.
+                    <input type="number" id="min" min="3" max="200" value="10" autocomplete="off"> <!-- value defines the minDist -->
+                 </div>
+                 <div>Max(clustered)
+                    <input type="radio" name="minmax-rbtns" autocomplete="off"> <!-- selects mode, when every next point is placed not farther than maxDist from any already present point. Points are clustered. -->
+                    Dist.
+                    <input type="number" id="max" min="5" max="100" value="50" autocomplete="off"> <!--value defines the maxDist -->
+                 </div>
+                 <div>Dots quantity
+                    <input type="number" id="points-qt" min = "10" max="10000" value = "50" autocomplete="off"> <!-- value defines the number of points to try to generate. -->
+                 </div>
+            </header>
+            <main> <!-- container for vanvas. Needed to set canvas width and height. -->
+                <canvas></canvas>   <!-- the canvas in the flesh. -->
+            </main>
+            <footer></footer> <!-- footer semantic HTML element. Text inside will disply the number of points successfully generated and placed on canvas. --> 
+        </div>
+        <script>
+//*************************** global variables **********************
+const mainElem = document.querySelector("main");
+const canvasElem = document.querySelector("canvas");
+const ctx = canvasElem.getContext("2d"); // getContext("2d") canvas element method returns an object with methods for drawing.
+//*************************** events ********************************
+mainElem.addEventListener('click',e=>{
+    generatePoints(e); /* when you click on canvas, this function is invoked. As argument 'e' is passed MouseEvent object. */
+});
+//*************************** logic *********************************
+function generatePoints(e){ // this function do everything. 
+    const minDist = parseInt(document.querySelector("#min").value); // read minDist value. 
+    const maxDist = parseInt(document.querySelector("#max").value); // read maxDist value.
+    const isMin = document.querySelector("#min-rbtn").checked; // deslaration and assignment of boolean flag variable isMin. This variable defines spread or clustered mode.
+    const MAX_RETRIES = 100000; // when generation points, there can be situation when there is no place for new point. This variable will limit the tries number to generate new point, avoiding infinite looping.
+    const points = []; // this array will hold objects {x: `point's horizonta coordinate on canvas`, y: `point's vertical coordinate on canvas`} representin points.
+    points.push({x: e.layerX, y: e.layerY}); // The first point in array will be placed where user clicked.
+    ctx.clearRect(0,0,canvasElem.width,canvasElem.height); // erase everything on canvas.
+    renderPoint(points[0]); // Envoke renderPoint function, passing as argument firstPoint. There is only one point in array at this moment.
+    let pointsQt = parseInt(document.querySelector("#points-qt").value); // declare and assign pointsQt. 'Qt' is abbreviation for quantity.
+    while(--pointsQt){ // while do loop. 
+        const newPoint = {}; // object to hold x and y properties, representing new point coordinates.
+        let retryCounter = 0; // this counter paired with MAX_RETRIES constant will limit retries number, avoiding infinite loop.
+        do{
+            newPoint.x = Math.floor(canvasElem.width*Math.random()); // random horizontal coordinate within canvas.
+            newPoint.y = Math.floor(canvasElem.height*Math.random()); // the same for vertival coordinate.
+            retryCounter++; // increase the counter for every try.
+        }
+        while(!coordinatesOk(newPoint) && retryCounter < MAX_RETRIES); // check if newPoint coordinates are ok, and number of retries is no more then max limit.
+        if(retryCounter === MAX_RETRIES) break; // if this condition is true, means that the previous do while tried to place newPoint, and fail. There is no sense in continuing to try to generate and place the remaining points.
+        points.push(newPoint); // push newPoint object in array of objects.
+        renderPoint(newPoint); // draw point on canvas.
+    }
+    function coordinatesOk(p){ // depending on the selected mode: spread or clustered, will return true if point's 'p' coordinates satisfy to the respective requirements.
+    return isMin // true if mode Min(spread) radio button is checked.
+            ? points.every(v=>Math.hypot(v.x-p.x, v.y-p.y) > minDist) // if something unclear, check array method every() and Math.hypot() method. Topic is too big to cover in comments.
+            : points.some(v=>Math.hypot(v.x-p.x, v.y-p.y) < maxDist);   
+    }
+    function renderPoint(p){ // just draw a point on canvas.
+        ctx.fillStyle = "black";
+        ctx.fillRect(p.x-2,p.y-2,4,4);
+    }
+    document.querySelector("footer").textContent = points.length+" points placed."; // display how many point successfully placed on canvas.
+}
+
+//*************************** start here ****************************
+onload = ()=>{ // this event is fired when the hole page has loaded.
+    canvasElem.width = mainElem.offsetWidth; // set canvas width equal to its parent's width.
+    canvasElem.height = mainElem.offsetHeight; // the same for height.
+}
+//*******************************************************************
+        </script>
+    </body>
+</html>
