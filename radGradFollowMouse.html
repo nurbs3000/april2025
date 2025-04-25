@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Radial Gradient Follows the Mouse</title>
+        <style> /* internal style. */
+            :root{ /* in HTML, :root CSS pseudo-class identical to the selector html, exept its specificity is higher. */
+                --rad-grad-left: 0; /* CSS variable, aka custom property. Specifies the horizontal position of radial gradient. This one will be dynamically replaced by inline style by JS. */
+                --rad-grad-top: 0; /* the same for vertical positioin. */
+                --rad-grad-1st-color: hsl(0,0%,30%); /* initial color in radial gradient. */
+            }
+            *{ /* universal selector. Selects all elements. */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* include the padding and border in an element's total width and height. */
+            }
+            #wrapper{ 
+                width: 100vw; /* 100% of the viewport's width. */
+                height: 100vh; /* 100% of the viewport's height. */
+                position: relative; /* relative position, to position absolute children. */
+                background-color: black; /* conceptually, black works. */
+                overflow: hidden; /* overflow content is clipped, no scroll bars. */
+            }
+            #rad-grad{
+                position: absolute; /* top, left CSS properties works, and element removed from normal flow, possible to overlap. */
+                width: 100%; /* 100% of its parent width. */
+                height: 100%; /* 100% of its parent height. */
+                background-image: radial-gradient( /* main 'actor' of this story. */
+                    25vw 25vw  at left var(--rad-grad-left) top var(--rad-grad-top),
+                    var(--rad-grad-1st-color), /* 25% 25% of the viewport's width gives a circular form, independen of the viewport's ratio (width/height). Positioned by CSS variables, which will be controlled by JS. */
+                    black 100% 
+                );
+                filter: blur(70px); /* blurring makes it look better. */
+            }
+            .creature{ /* class selector. Moving black divs, representing creatures afraid of light. Position dynamicaly controled by JS. */
+                width: 1vw; /* 1% of the viewport's width. */
+                height: 1vw; /* the same for height. */
+                background-color: black; /* the idea behind, that they are invisible on the black background, ouside radial gradient. */
+                position: absolute; /* to be positioned by CSS left, top propetries. */
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- wrapps everything. -->
+            <div id="rad-grad"></div> <!-- radial gradient applied to this element. -->
+            <!-- JS append here 100 div creatures. -->
+        </div>
+        <script>
+//*************************** global variables **********************
+const rootElem = document.querySelector(":root");
+const wrapperElem = document.querySelector("#wrapper");
+const creatures = []; // this array will hold objects like {x: ver_coor, y: hor_coor, dir: angle_in_rad, pxPerFrame), representing creature divs. 
+let lightness = parseInt(getComputedStyle(rootElem).getPropertyValue("--rad-grad-1st-color").match(/\d+/g)[2]); // get the initial value for lightness component of hsl color. 
+let mX, mY; // hold mouse cursor coorditanes, updated by 'mousemove' event.
+//*************************** events ********************************
+document.addEventListener("mousemove",e=>{
+    mX = e.clientX; // update mouse horizonat coordinate.
+    mY = e.clientY; // the same for vertical.
+    moveRadGrad(); // envoke function, which will position radial gradiend.
+});
+document.addEventListener("wheel",e=>{ // fired by mouse wheel.
+    lightness -= e.deltaY/30; // lightness changed by rotation the mouse wheel.
+    lightness = lightness < 0 ? 0 : lightness > 100 ? 100 : lightness; // keep lightness in range 0-100.
+    rootElem.style.setProperty("--rad-grad-1st-color",`hsl(0,0%,${lightness}%)`); // set new hsl color.
+});
+//*************************** logic *********************************
+function moveRadGrad(){
+    rootElem.style.setProperty("--rad-grad-left",mX+"px"); // set radial gradient horizonal coorditane (or custom property controlling it, to be precise).
+    rootElem.style.setProperty("--rad-grad-top",mY+"px"); // the same for vertical coordinate.
+}
+function initCreatures(){ // create 100 divs and objects - 'creatures'.
+    for(let i = 0; i < 100; i++){
+        let x = Math.random()*wrapperElem.clientWidth; // random x coordinate.
+        let y = Math.random()*wrapperElem.clientHeight; // random y coordinate.
+        let dir = 2*Math.PI*Math.random(); // random angle giving the direction to move.
+        let pxPerFrame = 4; // speed in 'pixels per frame'.
+        creatures.push({x,y,dir,pxPerFrame}); // {x,y,dir,pxPerFrame} is the shorthand for object literal, when properties names and variable names are the same. The same as {x: x, dir: dir, pxPerFrame: pxPerFrame}
+        const elem = document.createElement('div'); // create div element.
+        elem.style.left = x+"px"; // style it.
+        elem.style.top = y+"px";
+        elem.id = `c${i}`; // construct id, using template literal.
+        elem.className = "creature"; // set class name. Will be convinient to style them all using class selector.
+        wrapperElem.appendChild(elem); // append created element into wrapper.
+    }
+}
+function updateCreatures(){ // update all 'creatures' position.
+    const w = wrapperElem.clientWidth, h = wrapperElem.clientHeight; // function scope variables, to type less.
+    const rgRadius = wrapperElem.clientWidth*25/100; // radial gradient radius (check line 30, to see why 25/100.
+    creatures.forEach((cr,idx)=>{ // calls this anonymous function for each object in creatures array.
+        if(Math.hypot(cr.x-mX, cr.y-mY) < rgRadius){ // if 'creature' inside light radius ran in opposite direction.
+            const dirAwayFromGradRad = Math.atan2(cr.y-mY, cr.x-mX); // count the angle of the vector from mouse cursor to current 'creature'.
+            cr.dir = dirAwayFromGradRad; // change 'creature' moving direction angle to new one.
+        }
+        cr.x += Math.cos(cr.dir)*cr.pxPerFrame; // update horizontal coordinate of the current object ('creature'). 
+        cr.x = cr.x < 0 ? w : cr.x > w ? 0 : cr.x; // ternary operator do this: if(cr.x < 0){cr.x = w;}else if(cr.x > w) {cr.x = 0;} else cr.x = 0; 
+        cr.y += Math.sin(cr.dir)*cr.pxPerFrame;
+        cr.y = cr.y < 0 ? h : cr.y > h ? 0 : cr.y;
+        const crElem = document.querySelector(`#c${idx}`); // selects respective div element. 
+        crElem.style.left = cr.x+"px"; // apdate element x position.
+        crElem.style.top = cr.y+"px"; // the same for y.
+    });
+}
+//*************************** start here ****************************
+initCreatures(); // initialize 100 divs-creatures.
+setInterval(updateCreatures, 1000/30); // will call 'updateCreatures()' function 30 times per second.
+//*******************************************************************
+        </script>
+    </body>
+</html>
