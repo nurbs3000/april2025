@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Click on Emoji Game</title>
+        <style> /* internal style. */
+            *{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* universal selector. Selects all elements. */
+                font-family: Arial; /* the same font as for canvas, in case someone want to pixelate regular letters. */
+                font-size: 30px; /* readability. */
+            }
+            #wrapper{
+                width: 100vw; /* 100% of the viewport's width. */
+                height: 100vh; /* 100% of the viewport's height. */
+                background-color: #001; /* your choice of color. */
+                display: flex; /* it will be one dimensional layout. */
+                flex-direction: column; /* main axis is vertical. */
+                justify-content: center; /* items positioned in the center along main axis. */
+                align-items: center; /* in the center along cross axis. */
+            }
+            header,footer{
+                width: 512px; /* it seems to me, that algorithm will be easier to understand this way. */
+                height: 40px; /* enough space for input elements. */
+                background-color: navy; /* your choice of color. */
+                color: beige; /* no be visible on dark background. */
+                display: flex; /* to organize items somehow. */
+                justify-content: space-evenly; /* items will have equal space around them along main axis (horizontal by default). */
+            }
+            main{
+                width: 512px; /* the same width as footer and header. */
+                height: 512px; /* let it be square. */
+                position: relative; /* to position children elements cancas and img abolutely. */
+                background-color: silver; /* almost white. */
+            }
+            canvas{
+                position: absolute;
+            }
+            img{
+                position: absolute;
+                image-rendering: pixelated; /* image will be scaled, and I want no image interpolation to be implemented. */
+                margin-left: -25px; /* to correct its position a little bit. */
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- all other elements inside. -->
+            <header> <!-- holds 2 input elements. -->
+                <input type="text" id="emoji" size="1" minlength="2" maxlength="2" autocomplete="off"> <!-- accept text. -->
+                <input type="range" id="emoji-size" min="8" max="128" value="32" autocomplete="off"> <!-- the size of the image, which will be scaled to the size 512x512 px. -->
+            </header>
+            <main> <!-- will have width and height 512px. -->
+                <img> <!-- this element will be under full JS control. -->
+                <canvas></canvas>
+            </main>
+            <footer> <!-- text inside will correspond to the image element size. -->
+            </footer>
+        </div>
+        <script>
+//*************************** global variables **********************
+const imgElem = document.querySelector("img");
+const canvasElem = document.querySelector("canvas");
+const ctx = canvasElem.getContext("2d"); /* creates 2D context object with drawing methods needed to do something on canvas. */
+//*************************** events ********************************
+document.addEventListener("input",()=>{ // input text and slider will fire this event.
+    canvasToImg(); // this function will do everything.
+});
+//*************************** logic *********************************
+function canvasToImg(){
+    const size = parseInt(document.querySelector("#emoji-size").value); // read the value of slider, and assign it to size variable.
+    document.querySelector("footer").textContent = `${size} x ${size} px`; // display info. Always better when application is responsive.
+    const emoji = document.querySelector("#emoji").value; // get emoji, for further manipulations.
+    canvasElem.width = size; // and next line, set canvas to a square with size x size dimensions.
+    canvasElem.height = size;
+    ctx.font = `${4/5*size}px Arial`; // set font size for the fillText() method.
+    ctx.fillText(emoji,0,4/5*size); // draw emoji on canvas.
+    imgElem.src = canvasElem.toDataURL(); // 2nd most improtant code line in program. Returns a data URL containing a representation of the image. Consult google for further information. 
+    ctx.clearRect(0,0,size,size); // try to comment out this line of code, to get the full idea what it do.
+    imgElem.style="width:512px;height:512px"; // The "capital" line in all code. Scale the image from some 8x8,40*40, or any other smaller size, set by slider, to 512x512px size. Line 43 keep it pixelated. 
+}
+//*******************************************************************
+        </script>
+    </body>
+</html>
