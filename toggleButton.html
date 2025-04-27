@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Toggle Button</title>
+        <style> /* internal style. */
+            *{ /* universal selector. Selects all elements. */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* include the padding and border in an element's total width and height. */
+            }
+            #wrapper{
+                width: 100vw; /* 100% of the viewport's width. */
+                height: 100vh; /* 100% of the viewport's height. */
+                background-color: darkKhaki; /* your choice of color. */
+                display: flex; /* to organize buttons. */ 
+                flex-direction: column; /* items are displayed vertically (main axis is vertical). */
+                justify-content: space-evenly; /* equal space around items on main axis. */
+                align-items: center; /* items aligned in the center across cross axis. */
+            }
+            #label-checkbox,#btn,#div-btn{ /* comma separated list of selectors - the CSS selector list. */ 
+                width: 100px; /* whenever possible, go for the biggest. */
+                height: 50px;
+                background-color: steelBlue; /* your choice of color. */
+                border: 3px solid dimgray; /* set border, to modify in on hover. */
+                border-radius: 5px; /* round border corners. */
+                font-size: 22px;
+                font-family: Arial;
+                user-select: none; /* specifies wheather the of an elment can be selected. */
+            }
+            #label-checkbox:hover,#btn:hover,#div-btn:hover{ /* the CSS psedo-class :hover selects elements when mouse over them. */
+                border: 3px solid silver; 
+            }
+            #label-checkbox,#div-btn{ 
+                display: flex; /* needed to center items (text) in button's center. */
+                justify-content: center;
+                align-items: center;
+            }
+            #div-btn.pressed{ /* selector with higher specificity needed, to overwrite background-color set on line 26. */
+                background-color: orangeRed;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- 3 buttons are inside. -->
+            <label id="label-checkbox"> <!-- checkbox is inside, to make a label clickable, and to style it like a button. -->
+                <span>on</span> <!-- text displayed inside the label. --> 
+                <input type="checkbox" autocomplete="off" hidden> <!-- checkbox itself can't be restyled as button, so it must be hidden instead, and clickable label will 'cosplay' button. -->
+            </label>
+            <input type="button" id="btn" value = "on"> <!-- traditional button. Nothing special. -->
+            <div id="div-btn">on<div> <!-- regular <div> element will serve as button. -->
+        </div>
+        <script>
+//*************************** global variables **********************
+const checkboxElem = document.querySelector("#label-checkbox>input"); // top botton.
+const buttonElem = document.querySelector("#btn"); // middle button.
+const divBtnElem = document.querySelector("#div-btn"); // bottom button.
+//*************************** events ********************************
+checkboxElem.addEventListener("click", e=>{
+    const labelElem = document.querySelector("#label-checkbox");
+    const spanElem = document.querySelector("#label-checkbox>span");
+    if(e.target.checked){ // true is input type="checkbox" element is checked.
+        labelElem.style.backgroundColor = "orangeRed";
+        spanElem.textContent = "off";     
+    }else{
+        labelElem.style.backgroundColor = "";
+        spanElem.textContent = "on";
+    }
+});
+buttonElem.addEventListener("click", e=>{
+    e.target.value = e.target.value === "on" ? "off" : "on"; // ternary operator. Invert (toggles) the value attribute of buttonElem.
+    if(e.target.value === "off"){
+        e.target.style.backgroundColor = "orangeRed";
+    }else{
+        e.target.style.backgroundColor = "";
+    }
+});
+divBtnElem.addEventListener("click", e=>{
+    e.target.classList.toggle("pressed"); // toggle class name "pressed". Consult google fro further info.
+    e.target.textContent = e.target.classList.contains("pressed") ? "off" : "on"; // it divBtnElme have class name "pressed", text inside button will be "off", otherwise "on"
+});
+//*******************************************************************
+        </script>
+    </body>
+</html>
