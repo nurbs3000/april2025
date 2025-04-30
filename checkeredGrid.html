@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Checkered Gameboard</title>
+        <style> /* internal style. */
+            :root{ /* in HTML, :root CSS pseudo-class identical to the selector html, exept its specificity is higher. */
+                /* custom propertis aka CSS variables. Consult google if need be. */
+                --row-qt: 3; /* number of rows. */
+                --col-qt: 3; /* number of colums. */
+                --first-color: #222; /* your choice of colors. */
+                --second-color: #ddd;
+                --third-color: #333;
+            }
+            *{ /* universal selector. Selects all elements. */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* include the padding and border in an element's total width and height. */
+                font-size: 22px; /* to be visible. */
+                font-family: Arial; /* I like it. */
+            }
+            #wrapper{
+                width: 100vw; /* 100% of the viewport's width. */
+                height: 100vh; /* 100% of the viewport's height. */
+                display: flex; /* to organize header and main elements */
+                flex-direction: column; /* items are displayed vertically (main axix is vertical). */
+            }
+            header{
+                width: 100%; /* 100% of the parent's width. */
+                height: 50px; /* some space for input elements. */
+                background-color: gray; /* arbitrary color. */ 
+                display: flex; /* to organize input elements. */
+                justify-content: space-evenly; /* equal space around items on the main axis. */
+                align-items: center; /* items in the center on the cross axis. */
+            }
+            main{
+                width: 100%; /* 100% of the parent width. */
+                height: 100%; /* 100% of the remaining free height. */
+                background-color: dimGray; /* arbitrary color. */
+                z-index: -1; /* stack order. Must be under board elements. */ 
+                display: flex; /* to position board-bg and board elements in center(next 2 lines do that), whey will 100% overlap too. */
+                justify-content: center;
+                align-items: center;
+                position: relative; /* needed only for z-index to work. */
+            }
+            #board{
+                background-color: var(--third-color); /* arbitrary color. */
+                display: grid; /* the main character on this story. Displays the element as a block-level grid container. */
+                grid-template-rows: 1fr repeat(var(--row-qt),1fr) 1fr; /* inside CSS repeat() function is reference to custom property. This custom propety, aka CSS variable will be dynamicaly set by JS. */
+                grid-template-columns: 1fr repeat(var(--col-qt),1fr) 1fr; /* the same for columns. */
+            }
+            .grid-cell{ /* to color grid-areas black and white( if checkered checkbox is checked), inside each area by JS is placed div element with respective(black or white) color. All this divs have class="grid-cell". */
+                display: flex; /* to place anything inside grid in center (next 2 lines do that). */
+                justify-content: center;
+                align-items: center;
+                color: var(--second-color); /* default color for grid cell divs. */
+            }
+        </style>
+    </head>
+    <body>
+        <div id="wrapper"> <!-- wrapps everything. -->
+            <header> <!-- holds control elements. -->
+                <div>
+                    rows
+                    <input type="number" id="row-qt" min="3" max="26" value="8" autocomplete="off" style="width:50px"> <!-- number of rows. -->
+                </div>
+                <div>
+                    columns
+                    <input type="number" id="col-qt" min="3" max="26" value="8" autocomplete="off" style="width:50px"> <!-- number of columns. -->
+                </div>
+                <div>
+                    checkered
+                    <input type="checkbox" id="checkered" checked autocomplete="off" style="accent-color:gainsboro;width:20px;height:20px"> <!-- switch chechered and mono colored board. -->
+                </div>
+                <div>
+                    letters
+                    <input type="checkbox" id="check-letters" checked autocomplete="off" style="accent-color:gainsboro;width:20px;height:20px"> <!-- switch letters on numbers for rows. -->
+                </div>
+            </header>
+            <main> <!-- serves as a container for board -->
+                <div id="board"></div> <!-- divs representing board "padding"(needed to display rows and columns number or letter) and board cells will be placed inside by JS. -->
+            </main>
+        </div>
+        <script>
+//*************************** global variables **********************
+const headerElem = document.querySelector("header"); // and the rest 4 variables, are here to type less.
+const mainElem = document.querySelector("main");
+const boardElem = document.querySelector("#board");
+const rootElem = document.querySelector(":root");
+const styleDeclarationObj = getComputedStyle(rootElem);
+//*************************** events ********************************
+headerElem.addEventListener("input",initBoard); // every of 4 input elements inside header will be handled inside this one function.
+//*************************** logic *********************************
+function initBoard(){ // this func is the whole program itself. It does all. 
+    const rowQt = Number(document.querySelector("#row-qt").value); //get value(it has a type string, that why the Number() method is implemented) from input element, and assign it as number of rows. 
+    const colQt = Number(document.querySelector("#col-qt").value); // the same for the number of columns. 
+    rootElem.style.setProperty("--row-qt",rowQt.toString()); // update the custom property (this custom property specifies the number of rows.
+    rootElem.style.setProperty("--col-qt",colQt.toString()); // ... number of columns. 
+    while(boardElem.firstChild){ // while boardElem have child.
+        boardElem.removeChild(boardElem.lastChild); // remove lastChild. This way 'while loop' removes all boardElem children.
+    }
+    const isLetters = document.querySelector("#check-letters").checked; // boolean flag variable.
+    const isCheckered = document.querySelector("#checkered").checked; // boolean flag variable.
+    const cellSize = (Math.min( // specifies cellSize(cells have a square form) in such a way, that board occupies maximum possible size within container(mainElem). 2 additional rows and columns to display rows and colums numbers.
+        mainElem.offsetWidth/(colQt+2),
+        mainElem.offsetHeight/(rowQt+2)
+    ));
+    boardElem.style.width = cellSize*(colQt+2)+"px"; // set board width.
+    boardElem.style.height = cellSize*(rowQt+2)+"px"; // set board height.
+    for(let r = 1; r <= rowQt+2; r++) // loop through each row.
+        for(let c = 1; c <= colQt+2; c++){ // neste loop, loop throuh each column.
+            const isPaddingCell = r === 1 || r === rowQt+2 || c === 1 || c === colQt+2; // flag variable. true if current cell is "padding", meaning it serves to display rows or lolumns numbers.
+            const elem = document.createElement("div"); // create div element, which will be places on current row and column position. Will be styled by code below.
+            if(isPaddingCell){ // current cell is for "padding" around checkered aread. Surve to display numbers.
+                elem.style.fontSize = `${Math.round(cellSize/2.5)}px`; // Font size must fit the cells size.
+                if((r === 1 || r === rowQt+2) && c !== 1 && c !== colQt+2){
+                    elem.textContent = c-1; // column number for for first and last row except first and last column.
+                }
+                if((c === 1 || c === colQt+2) && r !== 1 && r !== rowQt+2){ // the same logic for "padding" cells.
+                    elem.textContent = isLetters // ternary operator implemented to alternate between checkered(black and white) and mono color board.
+                        ? String.fromCharCode("A".charCodeAt(0)+rowQt+1-r) // this fancy string convert rows number to respective Latin alphabet letter, taking into account that we count from bottom, but the for loop (line 110) count from top.
+                        : rowQt+2-r; // just a number (letters checkbox is uncheked).
+                }
+            }else{
+                if((r%2 && c%2) || (!(r%2) && !(c%2))) // alternate between black and white.
+                    elem.style.backgroundColor = styleDeclarationObj.getPropertyValue(isCheckered ? "--first-color" : "--second-color"); // ternary operator again (checkered on mono color board) to set color of the current div(cell) on board.
+                else
+                    elem.style.backgroundColor = styleDeclarationObj.getPropertyValue("--second-color");
+            }
+            elem.style.width = cellSize-(isCheckered ? 0 : 2)+"px"; //Ternary operator is used here. If it is mono colored board, div(cell) size a bit smaller. This way lines between rows and columns are formed.
+            elem.style.height = elem.style.width; // div(cell) is a square.
+            elem.style.gridArea = `${r}/${c}/${r+1}/${c+1}`; // place created div inside respective grid area.
+            elem.className = "grid-cell"; // set class name, to apply some styling whichi is common for all cells(divs) on line 52.
+            boardElem.append(elem); // final step. Append created element to board element.
+        }
+}
+//*************************** start here ****************************
+initBoard(); // initialize board with default values, while no input event is fired.
+//*******************************************************************
+        </script>
+    </body>
+</html>
