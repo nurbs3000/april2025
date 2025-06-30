@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Magnifying glass</title>
+        <script src="magnifyingGlass.js" defer></script> <!-- src attribute specifies the UTL of an external JS file. defer attribute specifies that the script executed after the page has finished parsing.  -->
+        <style>
+            :root{ /* :root pseudo-class in HTML is <html> element */
+                --mg-radius: 100px; /* custom property aka CSS variable. To change magnifying glass radius in one place */
+            }
+            *{ /* '*' universal selector, selects all elements */
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box; /* include the padding and border in an element's total width and height */
+            }
+            #container{ 
+                width: 100vw; /* 100% of viewports width */
+                height: 100vh; /* 100% of viewports height */
+                position: relative; /* to set position of its chilred to absolute */
+                background-color: #001; /* colors are at your disposal */
+                overflow: hidden; /* This is a must. Comment this line, press F2 and you get the idea */
+            }
+            #container>#img-contain{
+                width: 100%; /* 100% of its parent width */
+                height: 100%; /* 100% of its parent height */
+                object-fit: contain; /* the image keeps its aspect ratio, but is resized to fit within the container */
+            }
+            #container>#img-mg{
+                position: absolute; /* 2 reasons: The clip property applies only to absolutely positioned elements. We need to position element with style.left and style.top. */
+            }
+            #mg-border{ /* this serves as an ouline for the magnifying glass */
+                position: absolute; /* must follow the mouse, so style.top, style.left needed */
+                width: calc(var(--mg-radius) * 2); /* double the mg-radius */
+                height: calc(var(--mg-radius) * 2); /* the same */
+                border: 3px solid chocolate; /* CSS boder shorthand propety */
+                border-radius: 50%; /* forms a circle */
+                transform: translate(-50%,-50%); /* circle center will coincide with mouse curson position */
+            }
+            #mg-info{ /* this element display magnification value */
+                position: absolute;
+                color: chocolate;
+            }
+            #info{ /* will be multiline text, displayed by displayInfo() function */
+                position: absolute;
+                white-space: pre-wrap; /* text will wrap on line breask '\n' */
+                color: chocolate; /* who doesn't like chocolate? */
+                left: 10px;
+                top: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container"> <!-- contains everything -->
+            <img src="forest.jpg" alt="some img" id="img-mg"> <!-- this element will be dynamically resized, repositioned, and cliped by JS -->
+            <img src="forest.jpg" alt="some img" id="img-contain"> <!-- this image will keep its aspect ratio, but resized to fit within container -->
+            <div id="mg-border"></div> <!-- outline around the magnifying glass. Optional -->
+            <h2 id = "mg-info"></div> <!-- magnification value -->
+            <h2 id="info">info</h2> <!-- testing/debugging, for comprehending how it all works in first place -->
+        </div>
+    </body>
+</html>
